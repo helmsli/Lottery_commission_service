@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.xinwei</groupId>
+	<artifactId>Lottery_commission_service</artifactId>
+	<version>1.0.0.1</version>
+	<packaging>jar</packaging>
+
+	<name>Lottery_commission_service</name>
+	<description>Demo project for Spring Boot</description>
+
+	<repositories>
+		<repository>
+			<id>local</id>
+			<url>http://172.18.3.212:8081/nexus/content/repositories/thirdparty</url>
+		</repository>
+		<repository>
+			<id>aliyun</id>
+			<url>http://maven.aliyun.com/nexus/content/groups/public</url>
+		</repository>
+	</repositories>
+
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.6.RELEASE</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- 通用模块 -->
+		<dependency>
+			<groupId>com.xinwei.nnl</groupId>
+			<artifactId>nnl-commons</artifactId>
+			<version>1.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.0</version>
+		</dependency>
+
+		<!-- Hessian -->
+		<dependency>
+			<groupId>com.caucho</groupId>
+			<artifactId>hessian</artifactId>
+			<version>4.0.38</version>
+		</dependency>
+		<!--引入lib目录中的第三方包 -->
+		<dependency>
+			<groupId>com</groupId>
+			<artifactId>lottery_commission_db</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/lottery_commission_db.jar</systemPath>
+		</dependency>
+		
+		<dependency>
+			<groupId>com</groupId>
+			<artifactId>commAccess</artifactId>
+			<version>1.1</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/lottery_commAccess_db.jar</systemPath>
+		</dependency>
+		
+		<dependency>
+			<groupId>com</groupId>
+			<artifactId>nnl</artifactId>
+			<version>1.1</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/orderpost-api-1.3.jar</systemPath>
+		</dependency>
+		<!-- dependency>
+			<groupId>com.xinwei</groupId>
+			<artifactId>bankProxy</artifactId>
+			<version>01.01.01.03</version>
+			<classifier>sources</classifier>
+		</dependency-->
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+		<!-- 引入第三方包，打包需要引入 -->
+		<resources>
+			<resource>
+				<directory>lib</directory>
+				<targetPath>BOOT-INF/lib/</targetPath>
+				<includes>
+					<include>**/*.jar</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<targetPath>BOOT-INF/classes/</targetPath>
+			</resource>
+		</resources>
+	</build>
+
+
+<!--设置maven-war-plugins插件，否则外部依赖无法打进war包 
+
+ 2       <plugin>
+ 3         <groupId>org.apache.maven.plugins</groupId>
+ 4         <artifactId>maven-war-plugin</artifactId>
+ 5         <configuration>
+ 6           <webResources>
+ 7             <resource>
+ 8               <directory>lib</directory>
+ 9               <targetPath>WEB-INF/lib/</targetPath>
+10               <includes>
+11                 <include>**/*.jar</include>
+12               </includes>
+13             </resource>
+14           </webResources>
+15         </configuration>
+16       </plugin>
+ -->
+
+</project>

@@ -1,0 +1,3 @@
+2017-08-24 09:05:40,554 [main] INFO  com.xinwei.commission.CommissionServiceApplication - Starting CommissionServiceApplication v1.0.0.1 on xiaodeyong-k4450 with PID 4032 (C:\SVN\new_version\git\spring-boot\plateform_service\target\Lottery_commission_service-1.0.0.1.jar started by helmsli in C:\SVN\new_version\git\spring-boot\plateform_service\target) 
+2017-08-24 09:05:40,566 [main] INFO  com.xinwei.commission.CommissionServiceApplication - No active profile set, falling back to default profiles: default 
+2017-08-24 09:05:59,998 [main] INFO  com.xinwei.commission.CommissionServiceApplication - Started CommissionServiceApplication in 20.622 seconds (JVM running for 21.838) 
