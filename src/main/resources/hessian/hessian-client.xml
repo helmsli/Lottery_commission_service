@@ -12,11 +12,18 @@
 		<property name="serviceInterface" value="com.xinwei.crm.adapter.sms.service.SmsSendService"/>
     	<property name="serviceUrl" value="${sms.service.url}SmsSendService"/>
     </bean>
-    
-    <bean id="authService" class="org.springframework.remoting.caucho.HessianProxyFactoryBean">
-		<property name="serviceInterface" value="com.xinwei.crm.authcenter.service.AuthService" />
-		<property name="serviceUrl" value="${authcenter.url}AuthService" />
+    -->
+    <!-- 博彩项目余额数据库管理服务 -->
+    <bean id="serviceUserBlance" class="org.springframework.remoting.caucho.HessianProxyFactoryBean">
+		<property name="serviceInterface" value="com.xinwei.lotteryDb.service.ServiceUserBlance" />
+		<property name="serviceUrl" value="${hessian.lotComm_balDbServer}ServiceUserBlance" />
 	</bean>
-	 -->
+	 
+	 <!-- 博彩项目接入数据库服务 -->
+	<bean name="serviceBalanceTransDb"	class="org.springframework.remoting.caucho.HessianProxyFactoryBean">
+		<property name="serviceInterface" value="com.xinwei.commAccessDb.service.BalanceTransDb" />
+		<property name="serviceUrl" value="${hessian.lotComm_balTransDbServer}BalanceTransDb"/>
+	</bean>
+	 
 	
 </beans>

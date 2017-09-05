@@ -8,12 +8,11 @@
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd"
 	default-lazy-init="false">
-
-	<!-- 
-	<bean name="/lottery_reconcile/hessian/DividendQueryService"
+	
+	<bean name="/lot_comm_service/hessian/CommissionPresentService"
 		class="org.springframework.remoting.caucho.HessianServiceExporter">
-		<property name="serviceInterface" value="com.xinwei.lottery.reconcile.service.DividendQueryService" />
-		<property name="service" ref="dividendQueryService" />
+		<property name="serviceInterface" value="com.xinwei.orderpost.facade.CommissionPresentService" />
+		<property name="service" ref="balanceService" />
 	</bean>
- 	-->
+ 	
 </beans>

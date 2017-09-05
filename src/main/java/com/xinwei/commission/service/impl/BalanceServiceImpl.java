@@ -3,7 +3,10 @@
  */
 package com.xinwei.commission.service.impl;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -60,7 +63,47 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	@Override
 	public ProcessResult presentCommission(List<CommissionPresentInfo> commissionPresentInfoList) {
 		// TODO Auto-generated method stub
-		return null;
+		ProcessResult processResult = new ProcessResult();
+		for(CommissionPresentInfo commissionPresentInfo:commissionPresentInfoList)
+		{
+			try {
+				System.out.println(commissionPresentInfo.toString());
+				double amount = commissionPresentInfo.getAmt();
+				//因为是赠送commission，amount大于零是加钱，小于零是扣钱;因此需要变换一下符号
+				
+				
+				amount = -1 * amount;
+				commissionPresentInfo.setAmt(amount);
+			
+				BalanceServiceContext balanceServiceContext = new BalanceServiceContext();
+				this.pOneCommBalance(balanceServiceContext, commissionPresentInfo);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		processResult.setResponseInfo(commissionPresentInfoList);
+		return processResult;
+	}
+	
+	/**
+	 * 获取过期时间
+	 * @param expireTimestr
+	 * @return
+	 */
+	protected Date getExpireTime(String expireTimestr)
+	{
+		SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyyMMddHHmmss");
+		try
+		{
+			return simpleDateFormat.parse(expireTimestr);
+		}
+		catch (Exception e)
+		{
+			Calendar now = Calendar.getInstance();
+			now.add(Calendar.DAY_OF_MONTH, 1);
+			return now.getTime();
+		}
 	}
 	
 	/**
@@ -93,6 +136,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		 */
 		
 		boolean haveBeginTrans = false;
+		commissionPresentInfo.setResult(-1);
 		BalanceTransRunning bTransRunning= getFromPresentInfo(commissionPresentInfo);
 		bServiceContext.setWillDoneBTransRunning(bTransRunning);
 		bServiceContext.setCommissionPresentInfo(commissionPresentInfo);
@@ -186,7 +230,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		userBalanceApply.setTransactionTime(oldTransRunning.gettransactionTime());
 		userBalanceApply.setAmount(oldTransRunning.getAmount());		
 		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
-		if(userBalanceApplyResult.getResult()==UserBalanceApplyConst.ERROR_TRANSACTION_HAVEDONE)
+		if(userBalanceApplyResult.getError()==UserBalanceApplyConst.ERROR_TRANSACTION_HAVEDONE)
 	    {
 			initUserBalance.setTransaction(userBalanceApplyResult.getTransaction());	
 			initUserBalance.setBalance(userBalanceApplyResult.getBalance());
@@ -294,6 +338,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		UserBalanceApply userBalanceApply = new UserBalanceApply();
 		userBalanceApply.setTransaction(UserBalanceApplyConst.queryLastTransaction);
 		userBalanceApply.setUserId(bServiceContext.getWillDoneBTransRunning().getUserid());
+		userBalanceApply.setTransactionTime(OrderPostUtil.getDateFromTransID(UserBalanceApplyConst.queryLastTransaction));
 		UserBalanceApplyResult userBalanceApplyResult = getBTransFromUserDb(userBalanceApply);
 		//返回最后的交易记录
 		if(userBalanceApplyResult.getError()==UserBalanceApplyConst.ERROR_TRANSACTION_LAST)
@@ -336,8 +381,21 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		UserBalance userBalance = new UserBalance();
 		userBalance.setBalance(userBalanceApplyResult.getBalance());
 		userBalance.setUserId(bServiceContext.getWillDoneBTransRunning().getUserid());
-		userBalance.setExpiredata(userBalanceApplyResult.getExpiredata());
-		userBalance.setUpdatetime(userBalanceApplyResult.getUpdatetime());
+		try {
+			userBalance.setExpiredata(userBalanceApplyResult.getExpiredata());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			userBalance.setUpdatetime(userBalanceApplyResult.getUpdatetime());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			Calendar now = Calendar.getInstance();
+			userBalance.setUpdatetime(now.getTime());
+			
+		}
 		userBalance.setTransaction(userBalanceApplyResult.getTransaction());
 		
 		bServiceContext.getWillDoneBTransRunning().setBalance(userBalanceApplyResult.getBalance());
@@ -356,10 +414,13 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		List<BalanceTransRunning> lists= getBTransRunningFromDb(bServiceContext.getWillDoneBTransRunning());
 		if(lists!=null && lists.size()>0)
 		{
+			bServiceContext.getWillDoneBTransRunning().setUpdatetime(Calendar.getInstance().getTime());
 			balanceTransDb.updateBalanceTransRunning(bServiceContext.getWillDoneBTransRunning());
 		}
 		else
 		{
+			bServiceContext.getWillDoneBTransRunning().setUpdatetime(Calendar.getInstance().getTime());
+			
 			balanceTransDb.insertBalanceTransRunning(bServiceContext.getWillDoneBTransRunning());
 		}
 		return userBalance;
@@ -531,13 +592,18 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	{
 		BalanceTransRunning balanceTransRunning = new BalanceTransRunning();
 		balanceTransRunning.setUserid(commissionPresentInfo.getSubsId());
-		balanceTransRunning.setAmount(commissionPresentInfo.getAmt());
+		//因为是赠送接口
+		double amount = commissionPresentInfo.getAmt();
+		balanceTransRunning.setAmount(amount);
 		balanceTransRunning.setBalance(0d);
 		//todo:
 		balanceTransRunning.setBizsource(commissionPresentInfo.getSignInfo());
 		balanceTransRunning.setBiztype(String.valueOf(commissionPresentInfo.getBizType()));
 		//todo:
-		//balanceTransRunning.setExpiretime(commissionPresentInfo.gete);
+		Date expireTime = getExpireTime(commissionPresentInfo.getExpireTime());
+		
+		
+		balanceTransRunning.setExpiretime(expireTime);
 		balanceTransRunning.setOpertype(String.valueOf(commissionPresentInfo.getOperType()));
 		balanceTransRunning.setOrderid(commissionPresentInfo.getOrderID());
 		//todo:

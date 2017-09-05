@@ -3,7 +3,7 @@ package com.xinwei.commission.Const;
 import com.xinwei.lotteryDb.Const.UserBalanceApplyConst;
 
 public class BalanceServiceConst {
-	
+	/*8950-8999  全闭区间*/
 	public static final int Btrans_run_priority_high = 1;
 	public static final int Btrans_run_priority_low = 0;
 	public static final int Btrans_Lock_Timeout = 30;
@@ -16,16 +16,16 @@ public class BalanceServiceConst {
 	public static final int Btrans_status_succ = 0;
 	
 	//错误码
-	public static final int Btrans_r_begin = 100;
+	public static final int Btrans_r_begin = 8950;
 	
 	//已经被执行，并且信息相同
-	public static final int Btrans_r_haveDone = Btrans_r_begin+255;
+	public static final int Btrans_r_haveDone = 8950+0;
 	//已经被执行，并且信息不相同。
-	public static final int Btrans_r_haveDone_error = Btrans_r_begin+256;
+	public static final int Btrans_r_haveDone_error = Btrans_r_begin+1;
 	//获取账户余额信息错误
-	public static final int Btrans_r_Balance_error = Btrans_r_begin+257;
+	public static final int Btrans_r_Balance_error = Btrans_r_begin+2;
 	//
-	public static final int Btrans_r_tooManyRequest = Btrans_r_begin+258;
+	public static final int Btrans_r_tooManyRequest = Btrans_r_begin+3;
 	
 	
 	//内存更新结果
