@@ -12,8 +12,10 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.company.security.utils.SecurityUserAlgorithm;
 import com.xinwei.commAccessDb.domain.BalanceTransRunning;
 import com.xinwei.commAccessDb.service.BalanceTransDb;
 import com.xinwei.commission.Const.BalanceServiceConst;
@@ -52,12 +54,38 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	@Resource(name="serviceBalanceTransDb")
 	private BalanceTransDb balanceTransDb;
 	
+	/**
+	 * 用于对外的传输加密
+	 */
+	@Value("${transfer.accesskey}")  
+	private String transferAccessKey;
+	/**
+	 * 用户对内的传输加密
+	 */
+	@Value("${transfer.balanceKey}")  
+	private String transferBalKey;
+	
+	
+	
 	protected String InitDbTrans_const="002000082212000033333333";
 	/* (non-Javadoc)
 	 * @see com.xinwei.orderpost.facade.CommissionPresentService#presentCommission(java.util.List)
 	 */
 	
-	
+	/**
+	 * 对commission赠送的接入请求的加密校验
+	 * @param commissionPresentInfo
+	 * @return
+	 */
+	protected int checkAccessData(CommissionPresentInfo commissionPresentInfo)
+	{
+		String key  = OrderPostUtil.getPresentSignInfo(commissionPresentInfo, this.transferAccessKey);
+	    if(key.equalsIgnoreCase(commissionPresentInfo.getSignInfo()))
+	    {
+	    	return UserBalanceApplyConst.RESULT_SUCCESS;
+	    }
+	    return BalanceServiceConst.Error_signo_error;
+	}
 	
 	
 	@Override
@@ -67,6 +95,13 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		for(CommissionPresentInfo commissionPresentInfo:commissionPresentInfoList)
 		{
 			try {
+				commissionPresentInfo.setResult(UserBalanceApplyConst.RESULT_FAILURE);
+				int iRet = checkAccessData(commissionPresentInfo);
+				if(iRet!=UserBalanceApplyConst.RESULT_SUCCESS)
+				{
+					commissionPresentInfo.setResult(iRet);
+					continue;
+				}
 				System.out.println(commissionPresentInfo.toString());
 				double amount = commissionPresentInfo.getAmt();
 				//因为是赠送commission，amount大于零是加钱，小于零是扣钱;因此需要变换一下符号
@@ -209,6 +244,28 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		}
 		return commissionPresentInfo;
 	}
+	/**
+	 * 形成对userBalanceApply的签名
+	 * @param userBalanceApply
+	 */
+	protected void createCrcBalanceApply(UserBalanceApply userBalanceApply)
+	{
+		try {
+			String key = this.transferBalKey;
+			StringBuilder source = new StringBuilder();
+			source.append(userBalanceApply.getUserId());
+			source.append(SecurityUserAlgorithm.Prop_split);
+			source.append(userBalanceApply.getTransaction());
+			source.append(SecurityUserAlgorithm.Prop_split);
+			source.append(userBalanceApply.getAmount());			
+			String checkCrc = SecurityUserAlgorithm.EncoderByMd5(key, source.toString());
+			userBalanceApply.setBalanceext(checkCrc);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+		}
+	}
 	
 	/**
 	 * 根据最后交易号查询当前余额信息；
@@ -228,7 +285,8 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		userBalanceApply.setTransaction(oldTransRunning.getTransid());
 		userBalanceApply.setUserId(oldTransRunning.getUserid());
 		userBalanceApply.setTransactionTime(oldTransRunning.gettransactionTime());
-		userBalanceApply.setAmount(oldTransRunning.getAmount());		
+		userBalanceApply.setAmount(oldTransRunning.getAmount());	
+		createCrcBalanceApply(userBalanceApply);
 		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
 		if(userBalanceApplyResult.getError()==UserBalanceApplyConst.ERROR_TRANSACTION_HAVEDONE)
 	    {
@@ -241,6 +299,29 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	    return null;
 	}
 	
+	/**
+	 * 用于对 BalanceTransRunning进行传输加密
+	 * @param initDbTransaction
+	 */
+	protected void createCheckCrc(BalanceTransRunning initDbTransaction)
+	{
+		try {
+			String key = this.transferBalKey;
+			StringBuilder source = new StringBuilder();
+			source.append(initDbTransaction.getUserid());
+			source.append(SecurityUserAlgorithm.Prop_split);
+			source.append(initDbTransaction.getTransid());
+			source.append(SecurityUserAlgorithm.Prop_split);
+			source.append(initDbTransaction.getAmount());			
+			String checkCrc = SecurityUserAlgorithm.EncoderByMd5(key, source.toString());
+			initDbTransaction.setChecksum(checkCrc);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+		}
+		
+	}
 	
 	/**
 	 * 初始化数据库为0
@@ -262,6 +343,9 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		initDbTransaction.setExpiretime(now.getTime());
 		initDbTransaction.setUserid(bServiceContext.getWillDoneBTransRunning().getUserid());
 		initDbTransaction.setStatus(BalanceServiceConst.Btrans_status_init);
+		
+		createCheckCrc(initDbTransaction);
+		
 		bServiceContext.setInitBTransRunning(initDbTransaction);
 		List<BalanceTransRunning> querList = this.getBTransRunningFromDb(initDbTransaction);
 		if(querList!=null && querList.size()>0)
@@ -287,6 +371,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		userBalanceApply.setUserId(initDbTransaction.getUserid());
 		userBalanceApply.setTransactionTime(initDbTransaction.gettransactionTime());
 		userBalanceApply.setAmount(0d);
+		createCrcBalanceApply(userBalanceApply);
 		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
 	    if(userBalanceApplyResult.getResult()==UserBalanceApplyConst.RESULT_SUCCESS_init)
 	    {
@@ -300,7 +385,8 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	    	initUserBalance.setExpiredata(userBalanceApplyResult.getExpiredata());
 	    	initUserBalance.setTransaction(userBalanceApplyResult.getTransaction());
 	    	initUserBalance.setUpdatetime(userBalanceApplyResult.getUpdatetime());
-	    	this.balanceTransDb.updateBalanceTransRunning(initDbTransaction);
+	    	createCheckCrc(initDbTransaction);
+			this.balanceTransDb.updateBalanceTransRunning(initDbTransaction);
 	    	return initUserBalance;
 	    }
 	    return null;
@@ -314,6 +400,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	 */
 	protected UserBalanceApplyResult getBTransFromUserDb(UserBalanceApply userBalanceApply)
 	{
+		createCrcBalanceApply(userBalanceApply);
 		return serviceUserBlance.queryTransaction(userBalanceApply);
 		//返回最后的交易记录
 	}
@@ -325,6 +412,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	 */
 	protected 	List<BalanceTransRunning> getBTransRunningFromDb(BalanceTransRunning balTransRunning)
 	{
+		createCheckCrc(balTransRunning);		
 		return balanceTransDb.selectBalanceTransRunning(balTransRunning);		
 	}
 	/**
@@ -415,12 +503,13 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		if(lists!=null && lists.size()>0)
 		{
 			bServiceContext.getWillDoneBTransRunning().setUpdatetime(Calendar.getInstance().getTime());
+			this.createCheckCrc(bServiceContext.getWillDoneBTransRunning());
 			balanceTransDb.updateBalanceTransRunning(bServiceContext.getWillDoneBTransRunning());
 		}
 		else
 		{
 			bServiceContext.getWillDoneBTransRunning().setUpdatetime(Calendar.getInstance().getTime());
-			
+			this.createCheckCrc(bServiceContext.getWillDoneBTransRunning());
 			balanceTransDb.insertBalanceTransRunning(bServiceContext.getWillDoneBTransRunning());
 		}
 		return userBalance;
@@ -453,7 +542,8 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	 */
 	protected void insertBTransRunning(BalanceTransRunning balanceTransRunning)
 	{
-		 balanceTransDb.insertBalanceTransRunning(balanceTransRunning);
+		this.createCheckCrc(balanceTransRunning);
+		balanceTransDb.insertBalanceTransRunning(balanceTransRunning);
 	}
 	
 	/**
@@ -464,6 +554,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	 */
 	protected UserBalanceApplyResult updateUserBalanceDb(UserBalance nowUserbalance,UserBalanceApply userBalanceApply)
 	{
+		createCrcBalanceApply(userBalanceApply);
 	 return serviceUserBlance.updateUserBalance(nowUserbalance, userBalanceApply);
 	}
 	

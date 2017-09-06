@@ -26,6 +26,10 @@ public class BalanceServiceConst {
 	public static final int Btrans_r_Balance_error = Btrans_r_begin+2;
 	//
 	public static final int Btrans_r_tooManyRequest = Btrans_r_begin+3;
+	/**
+	 * 签名错误
+	 */
+	public static final int Error_signo_error = Btrans_r_begin+4;
 	
 	
 	//内存更新结果
