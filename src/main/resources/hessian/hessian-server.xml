@@ -12,7 +12,12 @@
 	<bean name="/lot_comm_service/hessian/CommissionPresentService"
 		class="org.springframework.remoting.caucho.HessianServiceExporter">
 		<property name="serviceInterface" value="com.xinwei.orderpost.facade.CommissionPresentService" />
-		<property name="service" ref="balanceService" />
+		<property name="service" ref="commissionPresentService" />
 	</bean>
  	
+ 	<bean name="/lot_comm_service/hessian/BankProxyInterface"
+		class="org.springframework.remoting.caucho.HessianServiceExporter">
+		<property name="serviceInterface" value="com.xinwei.coobill.bankproxy.facade.BankProxyInterface" />
+		<property name="service" ref="bankProxyInterface" />
+	</bean>
 </beans>

@@ -9,8 +9,7 @@ import com.xinwei.orderpost.domain.CommissionPresentInfo;
 public class BalanceServiceContext implements Serializable {
 	//从内存中获取的transid
 	private BalanceTransRunning cacheBtransRunning;
-	//第三方发送的业务请求
-	private CommissionPresentInfo commissionPresentInfo;
+	
 	//即将进行的业务信息
 	private BalanceTransRunning willDoneBTransRunning;
 	//余额数据库中的余额
@@ -29,12 +28,7 @@ public class BalanceServiceContext implements Serializable {
 	public void setCacheBtransRunning(BalanceTransRunning cacheBtransRunning) {
 		this.cacheBtransRunning = cacheBtransRunning;
 	}
-	public CommissionPresentInfo getCommissionPresentInfo() {
-		return commissionPresentInfo;
-	}
-	public void setCommissionPresentInfo(CommissionPresentInfo commissionPresentInfo) {
-		this.commissionPresentInfo = commissionPresentInfo;
-	}
+	
 	public BalanceTransRunning getWillDoneBTransRunning() {
 		return willDoneBTransRunning;
 	}
@@ -70,6 +64,12 @@ public class BalanceServiceContext implements Serializable {
 	 */
 	public void setInitBTransRunning(BalanceTransRunning initBTransRunning) {
 		this.initBTransRunning = initBTransRunning;
+	}
+	@Override
+	public String toString() {
+		return "BalanceServiceContext [cacheBtransRunning=" + cacheBtransRunning + ", willDoneBTransRunning="
+				+ willDoneBTransRunning + ", userDbBalance=" + userDbBalance + ", initUserDbBalance="
+				+ initUserDbBalance + ", initBTransRunning=" + initBTransRunning + "]";
 	}
 	
 	

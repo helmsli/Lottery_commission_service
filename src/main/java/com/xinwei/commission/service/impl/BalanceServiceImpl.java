@@ -21,22 +21,20 @@ import com.xinwei.commAccessDb.service.BalanceTransDb;
 import com.xinwei.commission.Const.BalanceServiceConst;
 import com.xinwei.commission.domain.BalanceServiceContext;
 import com.xinwei.commission.service.BalanceCacheService;
+import com.xinwei.commission.service.BalanceService;
 import com.xinwei.lotteryDb.Const.UserBalanceApplyConst;
 import com.xinwei.lotteryDb.domain.UserBalance;
 import com.xinwei.lotteryDb.domain.UserBalanceApply;
 import com.xinwei.lotteryDb.domain.UserBalanceApplyResult;
 import com.xinwei.lotteryDb.service.ServiceUserBlance;
-import com.xinwei.nnl.common.domain.ProcessResult;
 import com.xinwei.orderpost.common.OrderPostUtil;
-import com.xinwei.orderpost.domain.CommissionPresentInfo;
-import com.xinwei.orderpost.facade.CommissionPresentService;
 
 /**
  * @author helmsli
  *
  */
 @Service("balanceService")
-public class BalanceServiceImpl implements CommissionPresentService {
+public class BalanceServiceImpl  implements BalanceService{
 
 	@Autowired 
 	private BalanceCacheService balanceCacheService;
@@ -55,11 +53,6 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	private BalanceTransDb balanceTransDb;
 	
 	/**
-	 * 用于对外的传输加密
-	 */
-	@Value("${transfer.accesskey}")  
-	private String transferAccessKey;
-	/**
 	 * 用户对内的传输加密
 	 */
 	@Value("${transfer.balanceKey}")  
@@ -76,7 +69,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	 * 对commission赠送的接入请求的加密校验
 	 * @param commissionPresentInfo
 	 * @return
-	 */
+	 
 	protected int checkAccessData(CommissionPresentInfo commissionPresentInfo)
 	{
 		String key  = OrderPostUtil.getPresentSignInfo(commissionPresentInfo, this.transferAccessKey);
@@ -88,7 +81,6 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	}
 	
 	
-	@Override
 	public ProcessResult presentCommission(List<CommissionPresentInfo> commissionPresentInfoList) {
 		// TODO Auto-generated method stub
 		ProcessResult processResult = new ProcessResult();
@@ -120,7 +112,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		processResult.setResponseInfo(commissionPresentInfoList);
 		return processResult;
 	}
-	
+	*/
 	/**
 	 * 获取过期时间
 	 * @param expireTimestr
@@ -141,27 +133,46 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		}
 	}
 	
-	/**
-	 * @return the initDbTrans_const
-	 */
-	public String getInitDbTrans_const() {
-		return InitDbTrans_const;
-	}
-
-	/**
-	 * @param initDbTrans_const the initDbTrans_const to set
-	 */
-	public void setInitDbTrans_const(String initDbTrans_const) {
-		InitDbTrans_const = initDbTrans_const;
+	@Override
+	public int getBalance(BalanceServiceContext bServiceContext,long userid)
+	{
+		
+		try {
+			BalanceTransRunning bTransRunning = new BalanceTransRunning();
+			bTransRunning.setUserid(userid);
+			bServiceContext.setWillDoneBTransRunning(bTransRunning);
+			UserBalance cacheUserBalance = balanceCacheService.getUserBalance(bTransRunning.getUserid());
+			boolean isGetBalFromDb = false;
+			//处理用户余额的数据
+			if(cacheUserBalance==null)
+			{
+				cacheUserBalance = getBalFromDb(bServiceContext);
+				isGetBalFromDb = true;
+			}
+			if(cacheUserBalance!=null)
+			{
+				bServiceContext.setUserDbBalance(cacheUserBalance);
+				return UserBalanceApplyConst.RESULT_SUCCESS;
+			}
+			return UserBalanceApplyConst.ERROR_BALANCE_UID_NOTEQUAL;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return UserBalanceApplyConst.RESULT_FAILURE;
+		
 	}
 
 	/**
 	 * 
-	 * @param commissionPresentInfo
+	 * @param bServiceContext
+	 * @param bTransRunning
 	 * @return
 	 */
-	protected CommissionPresentInfo pOneCommBalance(BalanceServiceContext bServiceContext,CommissionPresentInfo commissionPresentInfo)
+	@Override
+	public int processBalance(BalanceServiceContext bServiceContext,BalanceTransRunning  bTransRunning)
 	{
+		
 		/**
 		 * 1.获取信息后，进行信息转换。将外部信息转换为内部信息
 		 * 2.首先构造redis的key，在redis中查询该用户的transid是否已经发生，并且已经内部确认该笔交易成功
@@ -171,16 +182,14 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		 */
 		
 		boolean haveBeginTrans = false;
-		commissionPresentInfo.setResult(-1);
-		BalanceTransRunning bTransRunning= getFromPresentInfo(commissionPresentInfo);
+		int iRet = -1;
 		bServiceContext.setWillDoneBTransRunning(bTransRunning);
-		bServiceContext.setCommissionPresentInfo(commissionPresentInfo);
 		//从redis中获取历史数据，判断是否已经交易完成
 		boolean bTransHasDone = bTransHasDone(bServiceContext,bTransRunning);
 		//该业务已经被执行
 		if(bTransHasDone)
 		{
-			return pOneCommBalanceDone(commissionPresentInfo,bServiceContext);
+			return pOneCommBalanceDone(bServiceContext);
 		}
 		//申请优先级锁
 		try {
@@ -198,8 +207,8 @@ public class BalanceServiceImpl implements CommissionPresentService {
 				}
 				if(cacheUserBalance==null)
 				{
-					commissionPresentInfo.setResult(BalanceServiceConst.Btrans_r_Balance_error);
-					return commissionPresentInfo;
+					return BalanceServiceConst.Btrans_r_Balance_error;
+					
 				}
 				//更新余额
 				int result = updateBalDb(bServiceContext, cacheUserBalance);
@@ -214,11 +223,11 @@ public class BalanceServiceImpl implements CommissionPresentService {
 						result = this.updateBalDb(bServiceContext, cacheUserBalance);
 					}
 					
-					commissionPresentInfo.setResult(result);
+					iRet=result;
 				}
 				else
 				{
-					commissionPresentInfo.setResult(result);
+					iRet=result;
 				}
 				
 				
@@ -226,13 +235,17 @@ public class BalanceServiceImpl implements CommissionPresentService {
 			//没有获取到锁
 			else
 			{
-				commissionPresentInfo.setResult(BalanceServiceConst.Btrans_r_tooManyRequest);
+				iRet=BalanceServiceConst.Btrans_r_tooManyRequest;
 				
 			}
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
+			if(iRet==UserBalanceApplyConst.RESULT_SUCCESS)
+			{
+				iRet = -1;
+			}
 		}
 		finally
 		{
@@ -242,7 +255,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 				balanceCacheService.endTransToCache(bTransRunning);
 			}
 		}
-		return commissionPresentInfo;
+		return iRet;
 	}
 	/**
 	 * 形成对userBalanceApply的签名
@@ -284,7 +297,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		UserBalanceApply userBalanceApply=new UserBalanceApply();
 		userBalanceApply.setTransaction(oldTransRunning.getTransid());
 		userBalanceApply.setUserId(oldTransRunning.getUserid());
-		userBalanceApply.setTransactionTime(oldTransRunning.gettransactionTime());
+		userBalanceApply.setTransactionTime(oldTransRunning.getTransactionTime());
 		userBalanceApply.setAmount(oldTransRunning.getAmount());	
 		createCrcBalanceApply(userBalanceApply);
 		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
@@ -369,7 +382,7 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		UserBalanceApply userBalanceApply=new UserBalanceApply();
 		userBalanceApply.setTransaction(initDbTransaction.getTransid());
 		userBalanceApply.setUserId(initDbTransaction.getUserid());
-		userBalanceApply.setTransactionTime(initDbTransaction.gettransactionTime());
+		userBalanceApply.setTransactionTime(initDbTransaction.getTransactionTime());
 		userBalanceApply.setAmount(0d);
 		createCrcBalanceApply(userBalanceApply);
 		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
@@ -623,27 +636,27 @@ public class BalanceServiceImpl implements CommissionPresentService {
 	 * @param bServiceContext
 	 * @return
 	 */
-	protected CommissionPresentInfo pOneCommBalanceDone(CommissionPresentInfo commissionPresentInfo,BalanceServiceContext bServiceContext)
+	protected int pOneCommBalanceDone(BalanceServiceContext bServiceContext)
 	{
-		CommissionPresentInfo retResult = commissionPresentInfo;
+		int iRet = -1;
 		//如果金额不相同
 		if(bServiceContext.getCacheBtransRunning().getAmount() != bServiceContext.getWillDoneBTransRunning().getAmount())
 		{
-			retResult.setResult(BalanceServiceConst.Btrans_r_haveDone_error);
-			return retResult;
+			return BalanceServiceConst.Btrans_r_haveDone_error;
+			
 		}
 		if(bServiceContext.getCacheBtransRunning().getUserid() != bServiceContext.getWillDoneBTransRunning().getUserid())
 		{
-			retResult.setResult(BalanceServiceConst.Btrans_r_haveDone_error);
-			return retResult;
+			return BalanceServiceConst.Btrans_r_haveDone_error;
+			
 		}
 		if(!bServiceContext.getCacheBtransRunning().getTransid().equalsIgnoreCase(bServiceContext.getWillDoneBTransRunning().getTransid()))
 		{
-			retResult.setResult(BalanceServiceConst.Btrans_r_haveDone_error);
-			return retResult;
+			return BalanceServiceConst.Btrans_r_haveDone_error;
+			
 		}
-		retResult.setResult(BalanceServiceConst.Btrans_r_haveDone);
-		return retResult;
+		return BalanceServiceConst.Btrans_r_haveDone;
+		
 		
 	}
 	
@@ -674,36 +687,5 @@ public class BalanceServiceImpl implements CommissionPresentService {
 		return false;
 	}
 	
-    /**
-     * 完成外部请求信息转换为内部信息
-     * @param commissionPresentInfo
-     * @return
-     */
-	public BalanceTransRunning getFromPresentInfo(CommissionPresentInfo commissionPresentInfo)
-	{
-		BalanceTransRunning balanceTransRunning = new BalanceTransRunning();
-		balanceTransRunning.setUserid(commissionPresentInfo.getSubsId());
-		//因为是赠送接口
-		double amount = commissionPresentInfo.getAmt();
-		balanceTransRunning.setAmount(amount);
-		balanceTransRunning.setBalance(0d);
-		//todo:
-		balanceTransRunning.setBizsource(commissionPresentInfo.getSignInfo());
-		balanceTransRunning.setBiztype(String.valueOf(commissionPresentInfo.getBizType()));
-		//todo:
-		Date expireTime = getExpireTime(commissionPresentInfo.getExpireTime());
-		
-		
-		balanceTransRunning.setExpiretime(expireTime);
-		balanceTransRunning.setOpertype(String.valueOf(commissionPresentInfo.getOperType()));
-		balanceTransRunning.setOrderid(commissionPresentInfo.getOrderID());
-		//todo:
-		//balanceTransRunning.setSrcipaddress(srcipaddress);
-		balanceTransRunning.setStatus(BalanceServiceConst.Btrans_status_init);
-		balanceTransRunning.setTransdesc(commissionPresentInfo.getReason());
-		balanceTransRunning.setTransid(commissionPresentInfo.getReqTransId());
-		
-		balanceTransRunning.setTransactionTime(OrderPostUtil.getDateFromTransID(commissionPresentInfo.getReqTransId()));
-		return balanceTransRunning;
-	}
+    
 }

@@ -14,11 +14,15 @@ import javax.annotation.Resource;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.company.security.service.SecurityUserService;
 import com.xinwei.commAccessDb.domain.BalanceTransRunning;
 import com.xinwei.commAccessDb.service.BalanceTransDb;
 import com.xinwei.commission.Const.BalanceServiceConst;
@@ -42,15 +46,17 @@ import com.xinwei.orderpost.facade.CommissionPresentService;
 //@ContextConfiguration(locations = {"classpath:spring.xml","classpath:spring-mybatis.xml"})
 public class BalanceServiceImplTest{
     
+	@InjectMocks
 	@Autowired
-	protected CommissionPresentService balanceService;
+	protected BalanceService balanceService;
 	
-	@Resource(name="serviceUserBlance")
+	@Mock(name="serviceUserBlance")
 	private ServiceUserBlance serviceUserBlance;
 	
-	
-	@Autowired
+	@Mock(name="serviceBalanceTransDb")
 	protected BalanceTransDb balanceTransDb;
+	
+	
 	@Autowired
 	protected BalanceCacheService balanceCacheService;
 	
@@ -70,7 +76,7 @@ public class BalanceServiceImplTest{
 	
 	@Before
 	public void setUp() throws Exception {
-		
+		MockitoAnnotations.initMocks(this);
 	}
 
 	
@@ -96,21 +102,10 @@ public class BalanceServiceImplTest{
 	 */
 	@Test
 	public void testInitDb() {
-		
-		//初始化context 
-		BalanceInitDbTestContext balanceDbTestContext = new BalanceInitDbTestContext();
-		 ServiceUserBalanceMock sUserviceBaseBalanceTrans = (ServiceUserBalanceMock)serviceUserBlance;
-		 sUserviceBaseBalanceTrans.setServiceUserBlance(balanceDbTestContext);
-		
-		  BTransInitDbTestContext bTransDbTestContext = new BTransInitDbTestContext();
-			
-			ServiceBalanceTransDbMock serviceBalanceTransDbMock = (ServiceBalanceTransDbMock)balanceTransDb;
-			serviceBalanceTransDbMock.setBalanceTransDb(bTransDbTestContext);
-			
 			
 		BalanceServiceImpl balanceServiceImpl = (BalanceServiceImpl)balanceService;
 		CommissionPresentInfo commissionPresentInfo = this.createCommissionPresentInfo();
-		BalanceTransRunning bTransRunning = balanceServiceImpl.getFromPresentInfo(commissionPresentInfo);
+		BalanceTransRunning bTransRunning = CommissionServiceImpl.getFromPresentInfo(commissionPresentInfo);
 		this.balanceCacheService.delUserBalance(commissionPresentInfo.getSubsId());
 		this.balanceCacheService.delTransFromCache(bTransRunning);
 		
@@ -120,10 +115,11 @@ public class BalanceServiceImplTest{
 		//balanceDbTestContext.setControlService_query(UserBalanceApplyConst.ERROR_UID_NOTEXIST);
 		//balanceDbTestContext.setControlService_update(UserBalanceApplyConst.ERROR_UID_NOTEXIST);
 		//bTransDbTestContext.setControlService_query(Control_BtransDb_query_notExist);
-		bServiceContext.setCommissionPresentInfo(commissionPresentInfo);	
+		//bServiceContext.setCommissionPresentInfo(commissionPresentInfo);	
 		balanceDbTestContext.setbServiceContext(bServiceContext);
-		balanceServiceImpl.pOneCommBalance(bServiceContext, commissionPresentInfo);
-		BalanceTransRunning balanceTransRunning = balanceServiceImpl.getFromPresentInfo(commissionPresentInfo);
+		int iRet = balanceService.processBalance(bServiceContext, bTransRunning);
+		
+		BalanceTransRunning balanceTransRunning = CommissionServiceImpl.getFromPresentInfo(commissionPresentInfo);
 		System.out.println(commissionPresentInfo);
 		assertEquals("inituser error:",UserBalanceApplyConst.RESULT_SUCCESS,commissionPresentInfo.getResult());
 		//继续测试减钱

@@ -259,7 +259,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 	public BalanceTransRunning getTransFromCache(BalanceTransRunning balanceTransRunning) {
 		// TODO Auto-generated method stub
 		long userid = balanceTransRunning.getUserid();
-		Date transactionTime = balanceTransRunning.gettransactionTime();
+		Date transactionTime = balanceTransRunning.getTransactionTime();
 		String transid = balanceTransRunning.getTransid();
 		
 		ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
@@ -282,7 +282,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 			ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
 			long userid = balanceTransRunning.getUserid();
 			
-			Date transactionTime = balanceTransRunning.gettransactionTime();
+			Date transactionTime = balanceTransRunning.getTransactionTime();
 			String transid = balanceTransRunning.getTransid();
 			String transKey = buildTransidKey(userid,transactionTime,transid);
 			opsForValue.set(transKey, balanceTransRunning);
@@ -306,7 +306,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 			ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
 			long userid = balanceTransRunning.getUserid();
 			
-			Date transactionTime = balanceTransRunning.gettransactionTime();
+			Date transactionTime = balanceTransRunning.getTransactionTime();
 			String transid = balanceTransRunning.getTransid();
 			String transKey = buildTransidKey(userid,transactionTime,transid);
 			//opsForValue.set(transKey, balanceTransRunning);
@@ -342,7 +342,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 	public boolean delTransFromCache(BalanceTransRunning balanceTransRunning) {
 		// TODO Auto-generated method stub
 				long userid = balanceTransRunning.getUserid();
-				Date transactionTime = balanceTransRunning.gettransactionTime();
+				Date transactionTime = balanceTransRunning.getTransactionTime();
 				String transid = balanceTransRunning.getTransid();
 				
 				

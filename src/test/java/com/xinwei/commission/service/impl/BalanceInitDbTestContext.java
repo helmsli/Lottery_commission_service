@@ -163,7 +163,6 @@ public class BalanceInitDbTestContext implements ServiceUserBlance{
 			//构造初始化余额的请求
 			UserBalanceApply wantedBalanceApply=new UserBalanceApply();
 			wantedBalanceApply.setTransaction(wantedUserBalance.getTransaction());
-			wantedBalanceApply.setUserId(this.bServiceContext.getCommissionPresentInfo().getSubsId());
 			wantedBalanceApply.setTransactionTime(OrderPostUtil.getDateFromTransID("002000082212000033333333"));
 			wantedBalanceApply.setAmount(0d);
 			//构造初始化余额的返回值

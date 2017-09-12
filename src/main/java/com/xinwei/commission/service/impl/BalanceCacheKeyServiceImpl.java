@@ -53,7 +53,7 @@ public class BalanceCacheKeyServiceImpl {
 	{
 		
 		long userid = balanceTransRunning.getUserid();
-		Date transactionTime = balanceTransRunning.gettransactionTime();
+		Date transactionTime = balanceTransRunning.getTransactionTime();
 		String transid = balanceTransRunning.getTransid();
 		return buildTransidKey(userid,transactionTime,transid);	
 	}

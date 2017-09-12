@@ -90,14 +90,25 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/lottery_commAccess_db.jar</systemPath>
 		</dependency>
-		
-		<dependency>
-			<groupId>com</groupId>
-			<artifactId>nnl</artifactId>
-			<version>1.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/orderpost-api-1.6.jar</systemPath>
-		</dependency>
+
+	<dependency>
+		<groupId>com.xinwei.nnl</groupId>
+		<artifactId>orderpost-api</artifactId>
+		<version>1.7</version>
+	</dependency>
+    
+
+	<dependency>
+		<groupId>com.xinwei</groupId>
+		<artifactId>bankproxy</artifactId>
+		<version>01.01.01.06</version>
+	</dependency>
+	 <dependency>
+	     <groupId>commons-codec</groupId>
+	     <artifactId>commons-codec</artifactId>
+	     <version>1.9</version>
+	 </dependency>   
+	
 		<dependency>
 			<groupId>com</groupId>
 			<artifactId>securityUtils</artifactId>
@@ -112,6 +123,12 @@
 			<version>01.01.01.03</version>
 			<classifier>sources</classifier>
 		</dependency-->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>2.10.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
