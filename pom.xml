@@ -5,7 +5,7 @@
 
 	<groupId>com.xinwei</groupId>
 	<artifactId>Lottery_commission_service</artifactId>
-	<version>1.0.0.1</version>
+	<version>1.0.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>Lottery_commission_service</name>
@@ -94,7 +94,7 @@
 	<dependency>
 		<groupId>com.xinwei.nnl</groupId>
 		<artifactId>orderpost-api</artifactId>
-		<version>1.7</version>
+		<version>1.8</version>
 	</dependency>
     
 

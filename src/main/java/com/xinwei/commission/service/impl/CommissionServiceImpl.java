@@ -58,7 +58,10 @@ public class CommissionServiceImpl implements CommissionPresentService {
 	protected int checkAccessData(CommissionPresentInfo commissionPresentInfo)
 	{
 		String key  = OrderPostUtil.getPresentSignInfo(commissionPresentInfo, this.transferAccessKey);
-	    if(key.equalsIgnoreCase(commissionPresentInfo.getSignInfo()))
+	    System.out.println(transferAccessKey);
+	    System.out.println(key);
+	    
+		if(key.equalsIgnoreCase(commissionPresentInfo.getSignInfo()))
 	    {
 	    	return UserBalanceApplyConst.RESULT_SUCCESS;
 	    }
