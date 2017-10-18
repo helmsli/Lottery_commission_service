@@ -279,14 +279,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 	{
 		
 		try {
-			ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
-			long userid = balanceTransRunning.getUserid();
-			
-			Date transactionTime = balanceTransRunning.getTransactionTime();
-			String transid = balanceTransRunning.getTransid();
-			String transKey = buildTransidKey(userid,transactionTime,transid);
-			opsForValue.set(transKey, balanceTransRunning);
-			return true;
+			return setCacheValue(balanceTransRunning,240);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
