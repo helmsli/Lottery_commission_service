@@ -81,7 +81,24 @@ public class CommissionServiceImpl implements CommissionPresentService {
 		balanceTransRunning.setAmount(amount);
 		balanceTransRunning.setBalance(0d);
 		//todo:
-		balanceTransRunning.setBizsource(commissionPresentInfo.getSignInfo());
+		try {
+			if(commissionPresentInfo.getMsgInfo()!=null)
+			{
+				if(commissionPresentInfo.getMsgInfo().length()>64)
+				{
+					balanceTransRunning.setBizsource(commissionPresentInfo.getMsgInfo().substring(0,64));
+					
+				}
+				else
+				{
+					balanceTransRunning.setBizsource(commissionPresentInfo.getMsgInfo());
+					
+				}
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		balanceTransRunning.setBiztype(String.valueOf(commissionPresentInfo.getBizType()));
 		//todo:
 		Date expireTime = getExpireTime(commissionPresentInfo.getExpireTime());
@@ -89,13 +106,44 @@ public class CommissionServiceImpl implements CommissionPresentService {
 		
 		balanceTransRunning.setExpiretime(expireTime);
 		balanceTransRunning.setOpertype(String.valueOf(commissionPresentInfo.getOperType()));
-		balanceTransRunning.setOrderid(commissionPresentInfo.getOrderID());
+		try {
+			if(commissionPresentInfo.getOrderID()!=null && commissionPresentInfo.getOrderID().length()>64)
+			{
+				balanceTransRunning.setOrderid(commissionPresentInfo.getOrderID().substring(0,64));
+			}
+			else
+			{
+				balanceTransRunning.setOrderid(commissionPresentInfo.getOrderID());
+						
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		//todo:
 		//balanceTransRunning.setSrcipaddress(srcipaddress);
 		balanceTransRunning.setStatus(BalanceServiceConst.Btrans_status_init);
-		balanceTransRunning.setTransdesc(commissionPresentInfo.getReason());
-		balanceTransRunning.setTransid(commissionPresentInfo.getReqTransId());
-		
+		try {
+			if(commissionPresentInfo.getReason()!=null && commissionPresentInfo.getReason().length()>128) {
+				balanceTransRunning.setTransdesc(commissionPresentInfo.getReason().substring(0,128));
+			}
+			else
+			{
+				balanceTransRunning.setTransdesc(commissionPresentInfo.getReason());
+					
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(commissionPresentInfo.getReqTransId().length()<=64)
+		{
+			balanceTransRunning.setTransid(commissionPresentInfo.getReqTransId());
+		}
+		else
+		{
+			return null;
+		}
 		balanceTransRunning.setTransactionTime(OrderPostUtil.getDateFromTransID(commissionPresentInfo.getReqTransId()));
 		return balanceTransRunning;
 	}

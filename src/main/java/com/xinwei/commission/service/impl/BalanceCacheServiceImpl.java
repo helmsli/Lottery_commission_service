@@ -337,8 +337,6 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 				long userid = balanceTransRunning.getUserid();
 				Date transactionTime = balanceTransRunning.getTransactionTime();
 				String transid = balanceTransRunning.getTransid();
-				
-				
 				String transKey = buildTransidKey(userid,transactionTime,transid);
 				redisTemplate.delete(transKey);
 				return true;
