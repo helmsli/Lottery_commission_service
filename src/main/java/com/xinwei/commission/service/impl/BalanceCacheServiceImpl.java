@@ -323,7 +323,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 			ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
 			long userid = userBalance.getUserId();
 			String transKey = this.buildUserBalKey(userid);
-			opsForValue.set(transKey, userBalance);
+			opsForValue.set(transKey, userBalance,240,TimeUnit.HOURS);
 			return true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -422,6 +422,8 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 		return cacheUserBalance;
 	}
 	
+	
+	
 	@Override
 	public boolean setUserBalance(BalanceTransRunning balanceTransRunning,UserBalance userBalance) {
 		// TODO Auto-generated method stub
@@ -456,8 +458,13 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 	@Override
 	public boolean delUserBalance(long userId) {
 		// TODO Auto-generated method stub
-		String userBalKey = buildUserBalKey(userId);
-		redisTemplate.delete(userBalKey);		
+		try {
+			String userBalKey = buildUserBalKey(userId);
+			redisTemplate.delete(userBalKey);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 		return true;
 	}
 

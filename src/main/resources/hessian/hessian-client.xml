@@ -17,16 +17,16 @@
     <bean id="serviceUserBlance" class="org.springframework.remoting.caucho.HessianProxyFactoryBean">
 		<property name="serviceInterface" value="com.xinwei.lotteryDb.service.ServiceUserBlance" />
 		<property name="serviceUrl" value="${hessian.lotComm_balDbServer}ServiceUserBlance" />
-		<property name="connectTimeout" value="5000" />
-		<property name="readTimeout" value="5000" />
+		<property name="connectTimeout" value="15000" />
+		<property name="readTimeout" value="15000" />
 	</bean>
 	 
 	 <!-- 博彩项目接入数据库服务 -->
 	<bean name="serviceBalanceTransDb"	class="org.springframework.remoting.caucho.HessianProxyFactoryBean">
 		<property name="serviceInterface" value="com.xinwei.commAccessDb.service.BalanceTransDb" />
 		<property name="serviceUrl" value="${hessian.lotComm_balTransDbServer}BalanceTransDb"/>
-	    <property name="connectTimeout" value="2000" />
-		<property name="readTimeout" value="5000" />
+	    <property name="connectTimeout" value="15000" />
+		<property name="readTimeout" value="15000" />
 	</bean>
 	 
 	

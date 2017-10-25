@@ -286,27 +286,48 @@ public class BalanceServiceImpl  implements BalanceService{
 	 * @param oldTransRunning
 	 * @return null--信息查询错误
 	 */
-	protected UserBalance queryBalFromOldTrans(BalanceServiceContext bServiceContext,BalanceTransRunning oldTransRunning)
+	public UserBalance queryBalFromOldTrans(BalanceServiceContext bServiceContext,BalanceTransRunning oldTransRunning)
 	{
 		UserBalance initUserBalance = new UserBalance();
 		initUserBalance.setUserId(oldTransRunning.getUserid());
 		initUserBalance.setBalance(0d);
 		initUserBalance.setExpiredata(oldTransRunning.getExpiretime());
-		initUserBalance.setUpdatetime(oldTransRunning.getUpdatetime());
+		try {
+			initUserBalance.setUpdatetime(oldTransRunning.getUpdatetime());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			initUserBalance.setUpdatetime(Calendar.getInstance().getTime());
+			e.printStackTrace();
+		}
 		initUserBalance.setTransaction(oldTransRunning.getTransid());
 		UserBalanceApply userBalanceApply=new UserBalanceApply();
 		userBalanceApply.setTransaction(oldTransRunning.getTransid());
 		userBalanceApply.setUserId(oldTransRunning.getUserid());
 		userBalanceApply.setTransactionTime(oldTransRunning.getTransactionTime());
 		userBalanceApply.setAmount(oldTransRunning.getAmount());	
-		createCrcBalanceApply(userBalanceApply);
-		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
-		if(userBalanceApplyResult.getError()==UserBalanceApplyConst.ERROR_TRANSACTION_HAVEDONE)
+		//createCrcBalanceApply(userBalanceApply);
+		UserBalanceApplyResult userBalanceApplyResult=null;
+		try {
+			userBalanceApplyResult = updateUserBalanceDb(initUserBalance, userBalanceApply);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			//need to clear the redis balance;
+			
+			//balanceCacheService.delUserBalance(oldTransRunning.getUserid());
+			
+		}
+		if(userBalanceApplyResult!=null&&userBalanceApplyResult.getError()==UserBalanceApplyConst.ERROR_TRANSACTION_HAVEDONE)
 	    {
 			initUserBalance.setTransaction(userBalanceApplyResult.getTransaction());	
 			initUserBalance.setBalance(userBalanceApplyResult.getBalance());
 			initUserBalance.setExpiredata(userBalanceApplyResult.getExpiredata());
-			initUserBalance.setUpdatetime(userBalanceApplyResult.getUpdatetime());
+			try {
+				initUserBalance.setUpdatetime(userBalanceApplyResult.getUpdatetime());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	    	return initUserBalance;
 	    }
 	    return null;
@@ -384,8 +405,8 @@ public class BalanceServiceImpl  implements BalanceService{
 		userBalanceApply.setUserId(initDbTransaction.getUserid());
 		userBalanceApply.setTransactionTime(initDbTransaction.getTransactionTime());
 		userBalanceApply.setAmount(0d);
-		createCrcBalanceApply(userBalanceApply);
-		UserBalanceApplyResult userBalanceApplyResult = this.serviceUserBlance.updateUserBalance(initUserBalance, userBalanceApply);
+		//createCrcBalanceApply(userBalanceApply);
+		UserBalanceApplyResult userBalanceApplyResult = updateUserBalanceDb(initUserBalance, userBalanceApply);
 	    if(userBalanceApplyResult.getResult()==UserBalanceApplyConst.RESULT_SUCCESS_init)
 	    {
 	    	initDbTransaction.setTransid(userBalanceApplyResult.getTransaction());	
@@ -423,7 +444,7 @@ public class BalanceServiceImpl  implements BalanceService{
 	 * @param balTransRunning
 	 * @return
 	 */
-	protected 	List<BalanceTransRunning> getBTransRunningFromDb(BalanceTransRunning balTransRunning)
+	public 	List<BalanceTransRunning> getBTransRunningFromDb(BalanceTransRunning balTransRunning)
 	{
 		createCheckCrc(balTransRunning);		
 		return balanceTransDb.selectBalanceTransRunning(balTransRunning);		
@@ -433,7 +454,7 @@ public class BalanceServiceImpl  implements BalanceService{
 	 * @param bServiceContext
 	 * @return
 	 */
-	protected UserBalance getBalFromDb(BalanceServiceContext bServiceContext)
+	public UserBalance getBalFromDb(BalanceServiceContext bServiceContext)
 	{
 		//获取余额的
 		UserBalanceApply userBalanceApply = new UserBalanceApply();
@@ -567,8 +588,16 @@ public class BalanceServiceImpl  implements BalanceService{
 	 */
 	protected UserBalanceApplyResult updateUserBalanceDb(UserBalance nowUserbalance,UserBalanceApply userBalanceApply)
 	{
-		createCrcBalanceApply(userBalanceApply);
-	 return serviceUserBlance.updateUserBalance(nowUserbalance, userBalanceApply);
+		try {
+			createCrcBalanceApply(userBalanceApply);
+			return serviceUserBlance.updateUserBalance(nowUserbalance, userBalanceApply);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+			balanceCacheService.delUserBalance(userBalanceApply.getUserId());
+		}
+		return null;
 	}
 	
 	/**
@@ -577,7 +606,7 @@ public class BalanceServiceImpl  implements BalanceService{
 	 * @param nowUserbalance
 	 * @return
 	 */
-	protected int updateBalDb(BalanceServiceContext bServiceContext,UserBalance nowUserbalance)
+	public int updateBalDb(BalanceServiceContext bServiceContext,UserBalance nowUserbalance)
 	{
 		//插入该记录；
 		int ret = -1;
@@ -602,6 +631,7 @@ public class BalanceServiceImpl  implements BalanceService{
 		userBalanceApply.setUpdatetime(bServiceContext.getWillDoneBTransRunning().getUpdatetime());
 		UserBalanceApplyResult userBalanceApplyResult = updateUserBalanceDb(nowUserbalance, userBalanceApply);
 		//该业务已经被成功执行
+		
 		ret = userBalanceApplyResult.getError();
 		if(UserBalanceApplyConst.RESULT_SUCCESS==userBalanceApplyResult.getResult())
 		{
