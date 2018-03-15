@@ -17,6 +17,7 @@ import com.xinwei.commAccessDb.domain.BalanceTransRunning;
 import com.xinwei.commission.Const.BalanceServiceConst;
 import com.xinwei.commission.service.BalanceCacheService;
 import com.xinwei.lotteryDb.domain.UserBalance;
+import com.xinwei.nnl.common.util.JsonUtil;
 @Service("balanceCacheService")
 public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implements BalanceCacheService  {
     	
@@ -266,7 +267,9 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 		
 		String transKey = buildTransidKey(userid,transactionTime,transid);
 		
-		BalanceTransRunning cacheBTransRunning = (BalanceTransRunning)opsForValue.get(transKey);	
+		String str = (String)opsForValue.get(transKey);	
+		BalanceTransRunning cacheBTransRunning=JsonUtil.fromJson(str, BalanceTransRunning.class);
+		
 		return cacheBTransRunning;
 	}
 
@@ -303,7 +306,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 			String transid = balanceTransRunning.getTransid();
 			String transKey = buildTransidKey(userid,transactionTime,transid);
 			//opsForValue.set(transKey, balanceTransRunning);
-			opsForValue.set(transKey, balanceTransRunning, expireHours, TimeUnit.HOURS);
+			opsForValue.set(transKey, JsonUtil.toJson(balanceTransRunning), expireHours, TimeUnit.HOURS);
 			return true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -323,7 +326,7 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 			ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
 			long userid = userBalance.getUserId();
 			String transKey = this.buildUserBalKey(userid);
-			opsForValue.set(transKey, userBalance,240,TimeUnit.HOURS);
+			opsForValue.set(transKey,JsonUtil.toJson(userBalance),240,TimeUnit.HOURS);
 			return true;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -416,10 +419,17 @@ public class BalanceCacheServiceImpl extends BalanceCacheKeyServiceImpl implemen
 	@Override
 	public UserBalance getUserBalance(long userId) {
 		// TODO Auto-generated method stub
-		String userBalKey = buildUserBalKey(userId);
-		ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
-		UserBalance cacheUserBalance = (UserBalance)opsForValue.get(userBalKey);
-		return cacheUserBalance;
+		try {
+			String userBalKey = buildUserBalKey(userId);
+			ValueOperations<Object, Object> opsForValue = redisTemplate.opsForValue();
+			String str = (String)opsForValue.get(userBalKey);
+			UserBalance cacheUserBalance = JsonUtil.fromJson(str, UserBalance.class);
+			return cacheUserBalance;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	

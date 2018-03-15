@@ -22,11 +22,10 @@
 		</repository>
 	</repositories>
 
-
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.6.RELEASE</version>
+		<version>1.5.9.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
@@ -34,9 +33,39 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
+		<spring-cloud.version>Edgware.RELEASE</spring-cloud.version>
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bus-amqp</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-feign</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-hystrix</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-hystrix-dashboard</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
@@ -51,16 +80,16 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- aop  -->
+		<!-- aop -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-		  <artifactId>spring-boot-starter-aop</artifactId>
-		</dependency>	
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
 		<!-- 通用模块 -->
 		<dependency>
 			<groupId>com.xinwei.nnl</groupId>
 			<artifactId>nnl-commons</artifactId>
-			<version>1.9</version>
+			<version>1.9.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -82,7 +111,7 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/lottery_commission_db.jar</systemPath>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com</groupId>
 			<artifactId>commAccess</artifactId>
@@ -91,24 +120,24 @@
 			<systemPath>${basedir}/lib/lottery_commAccess_db.jar</systemPath>
 		</dependency>
 
-	<dependency>
-		<groupId>com.xinwei.nnl</groupId>
-		<artifactId>orderpost-api</artifactId>
-		<version>1.8</version>
-	</dependency>
-    
+		<dependency>
+			<groupId>com.xinwei.nnl</groupId>
+			<artifactId>orderpost-api</artifactId>
+			<version>1.8</version>
+		</dependency>
 
-	<dependency>
-		<groupId>com.xinwei</groupId>
-		<artifactId>bankproxy</artifactId>
-		<version>01.01.01.06</version>
-	</dependency>
-	 <dependency>
-	     <groupId>commons-codec</groupId>
-	     <artifactId>commons-codec</artifactId>
-	     <version>1.9</version>
-	 </dependency>   
-	
+
+		<dependency>
+			<groupId>com.xinwei</groupId>
+			<artifactId>bankproxy</artifactId>
+			<version>01.01.01.06</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.9</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com</groupId>
 			<artifactId>securityUtils</artifactId>
@@ -116,13 +145,9 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/securit_utils.jar</systemPath>
 		</dependency>
-		
-		<!-- dependency> 
-			<groupId>com.xinwei</groupId>
-			<artifactId>bankProxy</artifactId>
-			<version>01.01.01.03</version>
-			<classifier>sources</classifier>
-		</dependency-->
+
+		<!-- dependency> <groupId>com.xinwei</groupId> <artifactId>bankProxy</artifactId> 
+			<version>01.01.01.03</version> <classifier>sources</classifier> </dependency -->
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
@@ -130,6 +155,17 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -137,6 +173,42 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<!-- delete file="${project.build.directory}/classes/jdbc.properties" 
+									/ <copy file="${project.build.outputDirectory}/application.properties" tofile="${project.build.directory}/application.properties" 
+									/> <copy file="${project.build.outputDirectory}/application.yml" tofile="${project.build.directory}/application.yml" 
+									/> -->
+								<copy todir="${project.build.directory}" overwrite="true">
+									<fileset dir="src/main/resources">
+										<include name="**/*.properties" />
+										<include name="*.yml" />
+										<include name="*.sh" />
+									</fileset>
+									
+								</copy>
+								<replace token="xxxx.jar" value="${project.build.finalName}.jar">
+									<fileset dir="${project.build.directory}">
+										<include name="*.sh" />
+									</fileset>
+								</replace>
+
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+
+
 		</plugins>
 		<!-- 引入第三方包，打包需要引入 -->
 		<resources>
@@ -151,27 +223,20 @@
 				<directory>src/main/resources</directory>
 				<targetPath>BOOT-INF/classes/</targetPath>
 			</resource>
+			<!-- resource> <directory>src/main/resources</directory> <includes> <include>*.properties</include> 
+				<include>*.sh</include> <include>*.yml</include> </includes> <targetPath>target/${project.version}</targetPath> 
+				</resource -->
 		</resources>
+		<directory>target/${project.version}</directory>
+		<outputDirectory>target/classes</outputDirectory>
+
 	</build>
 
 
-<!--设置maven-war-plugins插件，否则外部依赖无法打进war包 
-
- 2       <plugin>
- 3         <groupId>org.apache.maven.plugins</groupId>
- 4         <artifactId>maven-war-plugin</artifactId>
- 5         <configuration>
- 6           <webResources>
- 7             <resource>
- 8               <directory>lib</directory>
- 9               <targetPath>WEB-INF/lib/</targetPath>
-10               <includes>
-11                 <include>**/*.jar</include>
-12               </includes>
-13             </resource>
-14           </webResources>
-15         </configuration>
-16       </plugin>
- -->
+	<!--设置maven-war-plugins插件，否则外部依赖无法打进war包 2 <plugin> 3 <groupId>org.apache.maven.plugins</groupId> 
+		4 <artifactId>maven-war-plugin</artifactId> 5 <configuration> 6 <webResources> 
+		7 <resource> 8 <directory>lib</directory> 9 <targetPath>WEB-INF/lib/</targetPath> 
+		10 <includes> 11 <include>**/*.jar</include> 12 </includes> 13 </resource> 
+		14 </webResources> 15 </configuration> 16 </plugin> -->
 
 </project>

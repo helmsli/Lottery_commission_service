@@ -1,11 +1,9 @@
 spring:
-  redis:
-    cluster:
-      nodes:
-      - 101.200.166.163:9000
-      - 101.200.166.163:9001
-      - 101.200.166.163:9002
-      - 101.200.166.163:9003
-      - 101.200.166.163:9004
-      - 101.200.166.163:9005   
-    
+  application:
+    name: credit-service
+  rabbitmq:
+    host: 172.18.10.12
+    port: 5672
+    username: rabbitmq
+    password: rabbitmq
+    virtual-host: myvhost

@@ -19,7 +19,7 @@
 	<root level="INFO">
 		<appender-ref ref="CONSOLE" />
 	</root>
-	<logger name="com.xinwei" level="INFO">
+	<logger name="com.xinwei" level="DEBUG">
 		<appender-ref ref="dailyRollingFileAppender" />
 	</logger>
 </configuration>

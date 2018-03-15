@@ -117,11 +117,14 @@ public class BankServiceImpl implements BankProxyInterface {
 
 			int iRet = this.balanceService.getBalance(bServiceContext, arg0.getUid());
 			bankProxyResponse.setReturnCode(iRet);
-			DecimalFormat    df   = new DecimalFormat("######0.00");  
-			//bak1保存余额
-			bankProxyResponse.setBak1(df.format(bServiceContext.getUserDbBalance().getBalance()));
-			//币种
-			bankProxyResponse.setBak2("2");
+			if(iRet==0)
+			{
+				DecimalFormat    df   = new DecimalFormat("######0.00");  
+				//bak1保存余额
+				bankProxyResponse.setBak1(df.format(bServiceContext.getUserDbBalance().getBalance()));
+				//币种
+				bankProxyResponse.setBak2("2");
+			}
 			bServiceContext=null;
 			return bankProxyResponse;
 		} catch (Exception e) {

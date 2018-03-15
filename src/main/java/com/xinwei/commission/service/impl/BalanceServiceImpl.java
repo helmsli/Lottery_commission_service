@@ -11,6 +11,8 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,14 +21,17 @@ import com.company.security.utils.SecurityUserAlgorithm;
 import com.xinwei.commAccessDb.domain.BalanceTransRunning;
 import com.xinwei.commAccessDb.service.BalanceTransDb;
 import com.xinwei.commission.Const.BalanceServiceConst;
+import com.xinwei.commission.controller.feign.RestServiceBalance;
 import com.xinwei.commission.domain.BalanceServiceContext;
 import com.xinwei.commission.service.BalanceCacheService;
 import com.xinwei.commission.service.BalanceService;
 import com.xinwei.lotteryDb.Const.UserBalanceApplyConst;
+import com.xinwei.lotteryDb.controller.rest.UpdateBalRequest;
 import com.xinwei.lotteryDb.domain.UserBalance;
 import com.xinwei.lotteryDb.domain.UserBalanceApply;
 import com.xinwei.lotteryDb.domain.UserBalanceApplyResult;
 import com.xinwei.lotteryDb.service.ServiceUserBlance;
+import com.xinwei.nnl.common.util.JsonUtil;
 import com.xinwei.orderpost.common.OrderPostUtil;
 
 /**
@@ -46,7 +51,7 @@ public class BalanceServiceImpl  implements BalanceService{
 	/**
 	 * 引入hessian客户端调用后台服务
 	 */
-	@Resource(name="serviceUserBlance")
+	@Autowired
 	private ServiceUserBlance serviceUserBlance;
 	
 	@Resource(name="serviceBalanceTransDb")
@@ -59,6 +64,7 @@ public class BalanceServiceImpl  implements BalanceService{
 	private String transferBalKey;
 	
 	
+	private Logger logger = LoggerFactory.getLogger(getClass());
 	
 	protected String InitDbTrans_const="002000082212000033333333";
 	/* (non-Javadoc)
@@ -138,21 +144,33 @@ public class BalanceServiceImpl  implements BalanceService{
 	{
 		
 		try {
+			logger.debug(bServiceContext.toString());
 			BalanceTransRunning bTransRunning = new BalanceTransRunning();
 			bTransRunning.setUserid(userid);
 			bServiceContext.setWillDoneBTransRunning(bTransRunning);
 			UserBalance cacheUserBalance = balanceCacheService.getUserBalance(bTransRunning.getUserid());
+			
 			boolean isGetBalFromDb = false;
 			//处理用户余额的数据
 			if(cacheUserBalance==null)
 			{
+				logger.debug("cacheUserBalance is null");
 				cacheUserBalance = getBalFromDb(bServiceContext);
 				isGetBalFromDb = true;
 			}
+			else
+			{
+				logger.debug(cacheUserBalance.toString());
+			}
 			if(cacheUserBalance!=null)
 			{
+				logger.debug(cacheUserBalance.toString());
 				bServiceContext.setUserDbBalance(cacheUserBalance);
 				return UserBalanceApplyConst.RESULT_SUCCESS;
+			}
+			else
+			{
+				logger.debug("cacheUserBalance is null");
 			}
 			return UserBalanceApplyConst.ERROR_BALANCE_UID_NOTEQUAL;
 		} catch (Exception e) {
@@ -183,6 +201,12 @@ public class BalanceServiceImpl  implements BalanceService{
 		
 		boolean haveBeginTrans = false;
 		int iRet = -1;
+		
+		if(bTransRunning.getAmount()==0)
+		{
+			return -1;
+		}
+		
 		bServiceContext.setWillDoneBTransRunning(bTransRunning);
 		//从redis中获取历史数据，判断是否已经交易完成
 		boolean bTransHasDone = bTransHasDone(bServiceContext,bTransRunning);
@@ -191,6 +215,8 @@ public class BalanceServiceImpl  implements BalanceService{
 		{
 			return pOneCommBalanceDone(bServiceContext);
 		}
+		
+		
 		//申请优先级锁
 		try {
 			haveBeginTrans = balanceCacheService.beginTransToCache(bTransRunning, BalanceServiceConst.Btrans_Lock_Timeout);
@@ -462,6 +488,7 @@ public class BalanceServiceImpl  implements BalanceService{
 		userBalanceApply.setUserId(bServiceContext.getWillDoneBTransRunning().getUserid());
 		userBalanceApply.setTransactionTime(OrderPostUtil.getDateFromTransID(UserBalanceApplyConst.queryLastTransaction));
 		UserBalanceApplyResult userBalanceApplyResult = getBTransFromUserDb(userBalanceApply);
+		logger.debug(userBalanceApplyResult.toString()+"***");
 		//返回最后的交易记录
 		if(userBalanceApplyResult.getError()==UserBalanceApplyConst.ERROR_TRANSACTION_LAST)
 		{
@@ -470,7 +497,9 @@ public class BalanceServiceImpl  implements BalanceService{
 			queryBalTrans.setTransid(userBalanceApplyResult.getTransaction());
 			//从数据库查询已经交易过的记录
 			queryBalTrans.setTransactionTime(OrderPostUtil.getDateFromTransID(userBalanceApplyResult.getTransaction()));
+			logger.debug(queryBalTrans.toString()+"***1");
 			List<BalanceTransRunning> balTransRunnings = getBTransRunningFromDb(queryBalTrans);
+			logger.debug(JsonUtil.toJson(balTransRunnings)+"***2");
 			if(balTransRunnings!=null&&balTransRunnings.size()>0)
 			{
 				//查询当前余额
@@ -590,7 +619,10 @@ public class BalanceServiceImpl  implements BalanceService{
 	{
 		try {
 			createCrcBalanceApply(userBalanceApply);
-			return serviceUserBlance.updateUserBalance(nowUserbalance, userBalanceApply);
+			UpdateBalRequest updateBalRequest= new UpdateBalRequest();
+			updateBalRequest.setNowUseBalance(nowUserbalance);
+			updateBalRequest.setUserBalanceApply(userBalanceApply);
+			return serviceUserBlance.updateUserBalance(updateBalRequest.getNowUseBalance(),updateBalRequest.getUserBalanceApply());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
