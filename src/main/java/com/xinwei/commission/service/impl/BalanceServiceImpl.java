@@ -742,8 +742,12 @@ public class BalanceServiceImpl  implements BalanceService{
 			{
 				//todo:判断内存中的是否已经过期，是否需要重做等
 			}
-			
-			
+			else
+			{
+				UserBalance userDbBalance= new UserBalance();
+				userDbBalance.setBalance(cacheBtransRunning.getBalance());
+				bServiceContext.setUserDbBalance(userDbBalance);
+			}
 			return isDone;
 		}
 		return false;

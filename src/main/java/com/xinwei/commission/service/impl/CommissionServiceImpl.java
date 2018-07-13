@@ -1,5 +1,6 @@
 package com.xinwei.commission.service.impl;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -183,6 +184,17 @@ public class CommissionServiceImpl implements CommissionPresentService {
 				//balanceServiceContext.setCommissionPresentInfo(commissionPresentInfo);
 				
 				iRet = this.balanceService.processBalance(balanceServiceContext, bTransRunning);
+				if(iRet==0)
+				{
+					try {
+						DecimalFormat    df   = new DecimalFormat("#######.##");  
+						
+						commissionPresentInfo.setReason(df.format(balanceServiceContext.getUserDbBalance().getBalance()));
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 				commissionPresentInfo.setResult(iRet);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

@@ -119,7 +119,7 @@ public class BankServiceImpl implements BankProxyInterface {
 			bankProxyResponse.setReturnCode(iRet);
 			if(iRet==0)
 			{
-				DecimalFormat    df   = new DecimalFormat("######0.00");  
+				DecimalFormat    df   = new DecimalFormat("#######.##");  
 				//bak1保存余额
 				bankProxyResponse.setBak1(df.format(bServiceContext.getUserDbBalance().getBalance()));
 				//币种
