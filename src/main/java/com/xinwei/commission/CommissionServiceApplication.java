@@ -10,7 +10,6 @@ import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboard;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportResource;
 
 import com.xinwei.nnl.common.util.NNLoggerFactory;
 
@@ -23,13 +22,11 @@ import com.xinwei.nnl.common.util.NNLoggerFactory;
 @EnableHystrixDashboard
 @Configuration
 @EnableAutoConfiguration
-@ComponentScan ("com.xinwei.commission")
-@ImportResource ({ "classpath:hessian/hessian-client.xml", "classpath:hessian/hessian-server.xml" })
-public class CommissionServiceApplication
-{
-	
-	public static void main(String[] args)
-	{
+@ComponentScan("com.xinwei.commission")
+//@ImportResource ({ "classpath:hessian/hessian-client.xml", "classpath:hessian/hessian-server.xml" })
+public class CommissionServiceApplication {
+
+	public static void main(String[] args) {
 		NNLoggerFactory.MODULE_NAME = "plateform_service";
 		SpringApplication.run(CommissionServiceApplication.class, args);
 	}
