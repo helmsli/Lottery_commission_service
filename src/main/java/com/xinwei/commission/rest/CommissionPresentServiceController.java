@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
 import com.xinwei.nnl.common.domain.ProcessResult;
 import com.xinwei.orderpost.domain.CommissionPresentInfo;
 import com.xinwei.orderpost.facade.CommissionPresentService;
@@ -30,6 +31,12 @@ public class CommissionPresentServiceController {
 
 	@PostMapping("/presentCommission")
 	public ProcessResult presentCommission(@RequestBody List<CommissionPresentInfo> commissionPresentInfoList) {
-		return commissionPresentService.presentCommission(commissionPresentInfoList);
+		ProcessResult result = commissionPresentService.presentCommission(commissionPresentInfoList);
+		if (result.getResponseInfo() != null) {
+			@SuppressWarnings("unchecked")
+			List<CommissionPresentInfo> list = (List<CommissionPresentInfo>) result.getResponseInfo();
+			result.setResponseInfo(new Gson().toJson(list));
+		}
+		return result;
 	}
 }

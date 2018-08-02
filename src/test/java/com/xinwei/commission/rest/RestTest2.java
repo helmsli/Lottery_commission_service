@@ -44,19 +44,19 @@ public class RestTest2 {
 	@Autowired
 	private CommissionPresentService commissionPresentService;
 
-	//	@Test
+	@Test
 	public void getCreditBalanceTest() {
 		//		String userId = "1671438677";
-		String userId = "1234567809";
+		String userId = "1532001100";
 		ProcessResult result1 = getCreditBalance(userId);
 		System.out.println("################### start getCreditBalanceTest ##############################");
 		System.out.println("###getCreditBalance=" + result1);
 		System.out.println("################### end getCreditBalanceTest ##############################");
 	}
 
-	@Test
+	//	@Test
 	public void reduceBalanceTest() {
-		String userId = "1234567810";
+		String userId = "4294987297";
 		String orderId = "";
 		double money = 10;
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -68,8 +68,9 @@ public class RestTest2 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ProcessResult result1 = reduceBalance(userId, orderId, money, date);
+
 		System.out.println("################### start reduceBalanceTest ##############################");
+		ProcessResult result1 = reduceBalance(userId, orderId, money, date);
 		System.out.println("###getCreditBalance=" + result1);
 		System.out.println("################### end reduceBalanceTest ##############################");
 	}
@@ -108,6 +109,7 @@ public class RestTest2 {
 		commissionPresentInfo.setSubsId(getCreditUid(uid));
 		commissionPresentInfo.setAmt(money);
 		commissionPresentInfo.setMsgInfo("reduce money");
+		//		commissionPresentInfo.setMsgInfo("add money");
 		commissionPresentInfo.setBizType(0);
 		Calendar now = Calendar.getInstance();
 		now.add(Calendar.DAY_OF_YEAR, 1);
@@ -125,6 +127,11 @@ public class RestTest2 {
 			@SuppressWarnings("unchecked")
 			List<CommissionPresentInfo> retCommissionPresentInfoList = (List<CommissionPresentInfo>) processResult
 					.getResponseInfo();
+			//			Gson gson = new Gson();
+			//			List<CommissionPresentInfo> retCommissionPresentInfoList = gson
+			//					.fromJson((String) processResult.getResponseInfo(), new TypeToken<List<CommissionPresentInfo>>() {
+			//					}.getType());
+
 			if (retCommissionPresentInfoList != null && retCommissionPresentInfoList.size() > 0) {
 				processResult.setRetCode(retCommissionPresentInfoList.get(0).getResult());
 				processResult.setResponseInfo(retCommissionPresentInfoList.get(0));
